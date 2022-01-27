@@ -1,0 +1,3 @@
+tensorflow==2.9.0
+easydict
+tensorflow-compression==2.9.0

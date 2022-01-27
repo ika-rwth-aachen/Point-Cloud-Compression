@@ -1,0 +1,9 @@
+Header header
+time send_time
+uint8[] code
+int32[] shape
+uint8[] AzimuthMap
+uint8[] IntensityMap
+uint8[] RangeImage
+uint8[] NansRow 
+uint16[] NansCol 

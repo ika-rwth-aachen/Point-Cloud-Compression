@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<package>
+  <name>pointcloud_to_rangeimage</name>
+  <version>0.1.0</version>
+  <description>
+    Turns a 360 point cloud to range, azimuth and intensity image. Applies compression algorithms on these representations.
+  </description>
+
+  <maintainer email="yuchen.tao@rwth-aachen.de">Yuchen Tao</maintainer>
+  <maintainer email="till.beemelmanns@rwth-aachen.de">Till Beemelmanns</maintainer>
+
+  <license>MIT</license>
+
+  <author>Yuchen Tao</author>
+  <author>Till Beemelmanns</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>sensors_msgs</build_depend>
+  <build_depend>ros_bridge</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>image_transport</build_depend>
+  <build_depend>velodyne_pcl</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>sensors_msgs</run_depend>
+  <run_depend>ros_bridge</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>image_transport</run_depend>
+  <run_depend>velodyne_pcl</run_depend>
+
+  <export>
+
+  </export>
+</package>

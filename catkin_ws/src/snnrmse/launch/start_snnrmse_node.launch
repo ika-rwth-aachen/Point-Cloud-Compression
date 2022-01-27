@@ -1,0 +1,8 @@
+<launch>
+    <node
+        name="snnrmse"
+        pkg="snnrmse"
+        type="snnrmse_node.py"
+	    output="screen">
+    </node>
+</launch>

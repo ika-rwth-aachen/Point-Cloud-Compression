@@ -1,0 +1,3 @@
+[submodule "catkin_ws/src/velodyne"]
+	path = catkin_ws/src/velodyne
+	url = https://github.com/ros-drivers/velodyne

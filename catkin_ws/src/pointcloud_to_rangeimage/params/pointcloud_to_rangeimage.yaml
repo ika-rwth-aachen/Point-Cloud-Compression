@@ -1,0 +1,46 @@
+point_cloud_to_rangeimage:
+    # Velodyne sensor setup
+    vlp_rpm: 600.0
+    num_layers: 32
+    firing_cycle: 0.000055296
+    # Points are ordered with ascending elevation
+    elevation_offsets: [-25, -15.639, -11.31, -8.843, -7.254, -6.148, -5.333, -4.667, -4, -3.667, -3.333, -3, -2.667, -2.333, -2, -1.667, -1.333, -1, -0.667, -0.333,
+    0, 0.333, 0.667, 1, 1.333, 1.667, 2.333, 3.333, 4.667, 7, 10.333, 15]
+    azimuth_offsets: [1.4, -1.4, 1.4, -1.4, 1.4, -1.4, 4.2, 1.4, -1.4, -4.2, 4.2, 1.4, -1.4, -4.2, 4.2, 1.4, -1.4, -4.2, 4.2, 1.4,
+    -1.4, -4.2, 4.2, 1.4, -1.4, -4.2, 1.4, -1.4, 1.4, -1.4, 1.4, -1.4]
+
+    #Maximum range of sensor
+    threshold : 200
+
+    # Set to true to record point cloud image dataset
+    record_images: false
+    # Path to store lidar compression dataset. The path should contain three sub-folders named azimuth, range and intensity.
+    record_path: /catkin_ws/images/
+
+
+## Method image compression.
+# image_compression for for jpeg or png compression
+# or
+# one of the RNN based methods:
+# additive_lstm
+# oneshot_lstm with one-shot reconstruction
+# additive_gru for GRU with additive reconstruction
+compression_method: additive_lstm
+
+
+rnn_compression:
+    # weights path of RNN image compression model
+    weights_path: /catkin_ws/models/additive_lstm_32b_32iter.hdf5
+
+    # Bottleneck size of the model for RNN models
+    bottleneck: 32
+
+    # Number of iterations for compression of RNN models
+    # Fewer number of iterations leads to smaller compressed data size and lower compression quality.
+    num_iters: 32
+
+
+image_compression:
+    # Parameters for compression of range image uring jpeg or png compression
+    image_compression_method: jpeg  # png or jpeg
+    show_debug_prints: false

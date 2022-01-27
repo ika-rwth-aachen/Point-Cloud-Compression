@@ -1,0 +1,61 @@
+<launch>
+
+  <include file="$(find pointcloud_to_rangeimage)/launch/VLP-32C_driver.launch" />
+
+  <node pkg="rosbag" type="play" name="velodyne_rosbag" args="--clock -r 0.005 /catkin_ws/rosbags/evaluation_frames.bag"/>
+  
+  <!-- Load parameter from YAML file; subst_value="True"->you can use *find* in yaml-file -->
+  <rosparam command ="load" file="$(find pointcloud_to_rangeimage)/params/pointcloud_to_rangeimage.yaml" subst_value="True"/>
+
+  <node
+    name="pointcloud_to_rangeimage_node"
+    pkg="pointcloud_to_rangeimage"
+    type="pointcloud_to_rangeimage_node"
+    output="screen"		>
+  </node>
+
+  <node
+    name="compression_encoder_node"
+    pkg="pointcloud_to_rangeimage"
+    type="compression_encoder.py"
+    output="screen"		>
+  </node>
+
+  <node
+    name="compression_decoder_node"
+    pkg="pointcloud_to_rangeimage"
+    type="compression_decoder.py"
+    output="screen"		>
+  </node>
+
+  <node
+    name="rangeimage_to_pointcloud_node"
+    pkg="pointcloud_to_rangeimage"
+    type="rangeimage_to_pointcloud_node"
+    output="screen"		>
+  </node>
+
+  <node
+    name="snnrmse"
+    pkg="snnrmse"
+    type="snnrmse_node.py"
+    output="screen"		>
+    <remap to="/velodyne_points" from="/points2"/> 
+    <remap to="/rangeimage_to_pointcloud_node/pointcloud_out" from="/decompressed"/>
+  </node>
+
+  <node
+    name="rqt_graph"
+    pkg="rqt_graph"
+    type="rqt_graph"
+    output="screen"		>
+  </node>
+
+  <node
+    name="rviz"
+    pkg="rviz"
+    type="rviz"
+    args="-d $(find pointcloud_to_rangeimage)/launch/velodyne_compression.rviz" >
+  </node>
+
+</launch>
