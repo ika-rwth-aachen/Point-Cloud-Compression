@@ -149,7 +149,7 @@ if [[ ! -z ${RUNNING_CONTAINER_NAME} ]]; then
 
 else
   # start new container
-
+  ROS_MASTER_PORT=11311
 
   # GUI Forwarding to host's X server [https://stackoverflow.com/a/48235281]
   # Uncomment "X11UseLocalhost no" in /etc/ssh/sshd_config to enable X11 forwarding through SSH for isolated containers

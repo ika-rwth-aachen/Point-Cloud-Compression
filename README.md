@@ -199,6 +199,7 @@ The driver is integrated as a submodule to [catkin_ws/src/velodyne](catkin_ws/sr
 submodule with:
 ```bash
 git submodule init
+git submodule update
 ```
 
 ### 2. Pull Docker Image
@@ -239,7 +240,7 @@ Run the following commands inside the container to build and launch the compress
 # /catkin_ws >$
 catkin build
 source devel/setup.bash
-roslaunch pointcloud_tro_rangeimage compression.launch
+roslaunch pointcloud_to_rangeimage compression.launch
 ```
 
 You should see the following RVIZ window which visualizes the reconstructed point cloud.
