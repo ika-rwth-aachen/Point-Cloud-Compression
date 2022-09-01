@@ -265,7 +265,15 @@ Mail: `yuchen.tao (at) rwth-aachen.de`
 ## Cite
 
 ```
-Citation snipped will be published as soon as the official IEEE manuscript is available
+@INPROCEEDINGS{9827270,
+  author={Beemelmanns, Till and Tao, Yuchen and Lampe, Bastian and Reiher, Lennart and Kempen, Raphael van and Woopen, Timo and Eckstein, Lutz},
+  booktitle={2022 IEEE Intelligent Vehicles Symposium (IV)}, 
+  title={3D Point Cloud Compression with Recurrent Neural Network and Image Compression Methods}, 
+  year={2022},
+  volume={},
+  number={},
+  pages={345-351},
+  doi={10.1109/IV51971.2022.9827270}}
 ```
 
 ## Acknowledgement
