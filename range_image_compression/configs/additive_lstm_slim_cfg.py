@@ -25,8 +25,8 @@
 from easydict import EasyDict
 
 
-def additive_gru_cfg():
-    """Configuration for the Additive GRU Framework"""
+def additive_lstm_slim_cfg():
+    """Configuration for the Additive LSTM Framework"""
     cfg = EasyDict()
 
     # Data loader
@@ -35,16 +35,16 @@ def additive_gru_cfg():
 
     # Training
     cfg.epochs = 3000
-    cfg.batch_size = 256
-    cfg.val_batch_size = 256
+    cfg.batch_size = 32
+    cfg.val_batch_size = 32
     cfg.save_freq = 10000
-    cfg.train_output_dir = "output"
-    cfg.xla = False
+    cfg.train_output_dir = "/output"
+    cfg.xla = True
     cfg.mixed_precision = False
 
     # Learning Rate scheduler
-    cfg.lr_init = 2e-3
-    cfg.min_learning_rate = 2e-7
+    cfg.lr_init = 2e-4
+    cfg.min_learning_rate = 5e-7
     cfg.min_learning_rate_epoch = cfg.epochs
     cfg.max_learning_rate_epoch = 0
 

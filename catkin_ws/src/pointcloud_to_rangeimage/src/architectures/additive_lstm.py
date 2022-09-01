@@ -132,7 +132,8 @@ class DecoderRNN(Layer):
         self.RnnConv_d3 = RnnConv("RnnConv_d3", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
         self.RnnConv_d4 = RnnConv("RnnConv_d4", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
         self.RnnConv_d5 = RnnConv("RnnConv_d5", 128, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.Conv_d6 = Conv2D(1, kernel_size=(1, 1), padding='same', name='d_conv6', use_bias=False, activation=tf.nn.tanh)
+        self.Conv_d6 = Conv2D(1, kernel_size=(1, 1), padding='same', name='d_conv6', use_bias=False,
+                              activation=tf.nn.tanh)
         self.DTS1 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_1")
         self.DTS2 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_2")
         self.DTS3 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_3")
@@ -194,7 +195,7 @@ class EncoderModel(Model):
         self.DIM2 = self.DIM1 // 2
         self.DIM3 = self.DIM2 // 2
         self.DIM4 = self.DIM3 // 2
-        self.beta = 1.0/self.num_iters
+        self.beta = 1.0 / self.num_iters
 
     def initial_hidden(self, batch_size, hidden_size, filters):
         """Initialize hidden and cell states, all zeros"""
@@ -215,6 +216,7 @@ class EncoderModel(Model):
         hidden_d5 = self.initial_hidden(batch_size, [16, self.DIM1], 128)
         outputs = tf.zeros_like(inputs)
         codes = []
+        # Normalize the input such that it covers 96% depth and 97% intensity values
         inputs = self.normalize(inputs)
         res = inputs
         for i in range(self.num_iters-1):
@@ -258,10 +260,12 @@ class DecoderModel(Model):
         self.DIM4 = self.DIM3 // 2
         self.decoder = DecoderRNN(name="decoder")
         self.subtract = Subtract()
+
         self.inputs = []
         # inputs of shape [(bs, 2, 114, bottleneck), (bs, 2, 114, bottleneck), (bs, 2, 114, bottleneck), ...]
         for i in range(self.num_iters):
             self.inputs.append(tf.keras.layers.Input(shape=(2, self.DIM4, bottleneck)))
+
 
     def initial_hidden(self, batch_size, hidden_size, filters):
         """Initialize hidden and cell states, all zeros"""
@@ -280,6 +284,7 @@ class DecoderModel(Model):
         for i in range(self.num_iters):
             decoded, hidden_d2, hidden_d3, hidden_d4, hidden_d5 = \
                 self.decoder(codes[i], hidden_d2, hidden_d3, hidden_d4, hidden_d5, training=training)
+
             # Update res as predicted output in this iteration subtract the original input
             output_tensor = tf.add(output_tensor, decoded)
         output_tensor = tf.clip_by_value(tf.add(tf.multiply(output_tensor, 0.4), 0.1), 0, 1)
@@ -341,6 +346,7 @@ class MsgEncoder:
         except CvBridgeError as e:
             print(e)
 
+        # Pack binary bitstreams into numpy int8 arrays.
         image_vec = self.parse_img(range_image)
         codes = self.encoder(image_vec)
         codes = (np.stack(codes).astype(np.int8) + 1) // 2
@@ -372,7 +378,7 @@ class MsgDecoder:
     Publish message to the topic /msg_decoded.
     """
     def __init__(self):
-        self.pub = rospy.Publisher('msg_decoded', RangeImage_msg, queue_size=10)
+        self.pub = rospy.Publisher("msg_decoded", RangeImage_msg, queue_size=10)
         self.sub = rospy.Subscriber("/msg_encoded", RangeImageEncoded_msg, self.callback)
         self.bridge = CvBridge()
 
@@ -386,11 +392,13 @@ class MsgDecoder:
             zero_codes.append(np.zeros((1, 2, 114, bottleneck)))
         self.decoder(zero_codes)
         self.decoder.load_weights(weights_path, by_name=True)
+
         self.num_iters = num_iters
 
     def callback(self, msg):
         rospy.loginfo(rospy.get_caller_id() + "I heard %s", msg.send_time)
 
+        # Unpack compressed binary bitstreams
         shape = (msg.shape[0], msg.shape[1], msg.shape[2], msg.shape[3], msg.shape[4])
         code = np.unpackbits(np.fromstring(msg.code, np.uint8))
         code = code.astype(np.float32)*2-1

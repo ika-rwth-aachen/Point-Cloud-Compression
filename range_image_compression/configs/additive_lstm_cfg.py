@@ -37,8 +37,10 @@ def additive_lstm_cfg():
     cfg.epochs = 3000
     cfg.batch_size = 128
     cfg.val_batch_size = 128
-    cfg.save_freq = 4000
+    cfg.save_freq = 10000
     cfg.train_output_dir = "output"
+    cfg.xla = False
+    cfg.mixed_precision = False
 
     # Learning Rate scheduler
     cfg.lr_init = 1e-4
@@ -52,5 +54,5 @@ def additive_lstm_cfg():
     cfg.crop_size = 32
 
     # Give path for checkpoint or set to False otherwise
-    cfg.checkpoint = "/src/range_image_compression/output/final_model.hdf5"
+    cfg.checkpoint = False
     return cfg

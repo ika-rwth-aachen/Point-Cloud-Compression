@@ -56,11 +56,13 @@ class RnnConv(Layer):
                              kernel_size=kernel_size,
                              strides=self.strides,
                              padding='same',
-                             use_bias=False, name=name + '_i')
+                             use_bias=False,
+                             name=name + '_i')
         self.conv_h = Conv2D(filters=4 * self.filters,
                              kernel_size=hidden_kernel_size,
                              padding='same',
-                             use_bias=False, name=name + '_h')
+                             use_bias=False,
+                             name=name + '_h')
 
     def call(self, inputs, hidden):
         # with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
@@ -69,7 +71,6 @@ class RnnConv(Layer):
         # all gates are determined by input and hidden layer
         in_gate, f_gate, out_gate, c_gate = tf.split(
             conv_inputs + conv_hidden, 4, axis=-1)  # each gate get the same number of filters
-
         in_gate = tf.nn.sigmoid(in_gate)  # input/update gate
         f_gate = tf.nn.sigmoid(f_gate)
         out_gate = tf.nn.sigmoid(out_gate)
@@ -94,8 +95,8 @@ class EncoderRNN(Layer):
         encoded: encoded binary array in each iteration
         hidden2, hidden3, hidden4: hidden and cell states of corresponding ConvLSTM layers
     """
-    def __init__(self, bottleneck):
-        super(EncoderRNN, self).__init__()
+    def __init__(self, bottleneck, name=None):
+        super(EncoderRNN, self).__init__(name=name)
         self.bottleneck = bottleneck
         self.Conv_e1 = Conv2D(64, kernel_size=(3, 3), strides=(2, 2), padding="same", use_bias=False, name='Conv_e1')
         self.RnnConv_e1 = RnnConv("RnnConv_e1", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
@@ -125,7 +126,7 @@ class EncoderRNN(Layer):
         # Using randomized quantization during training.
         if training:
             probs = (1 + x) / 2
-            dist = tf.compat.v1.distributions.Bernoulli(probs=probs, dtype=tf.float32)
+            dist = tf.compat.v1.distributions.Bernoulli(probs=probs, dtype=input.dtype)
             noise = 2 * dist.sample(name='noise') - 1 - x
             encoded = x + tf.stop_gradient(noise)
         else:
@@ -144,8 +145,8 @@ class DecoderRNN(Layer):
         decoded: decoded array in each iteration
         hidden2, hidden3, hidden4, hidden5: hidden and cell states of corresponding ConvLSTM layers
     """
-    def __init__(self):
-        super(DecoderRNN, self).__init__()
+    def __init__(self, name=None):
+        super(DecoderRNN, self).__init__(name=name)
         self.Conv_d1 = Conv2D(512, kernel_size=(1, 1), use_bias=False, name='d_conv1')
         self.RnnConv_d2 = RnnConv("RnnConv_d2", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
         self.RnnConv_d3 = RnnConv("RnnConv_d3", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
@@ -199,18 +200,18 @@ class LidarCompressionNetwork(Model):
     https://arxiv.org/pdf/1608.05148.pdf. This architecture uses additive reconstruction framework and ConvLSTM layers.
     """
     def __init__(self, bottleneck, num_iters, batch_size, input_size):
-        super(LidarCompressionNetwork, self).__init__()
+        super(LidarCompressionNetwork, self).__init__(name="lidar_compression_network")
         self.bottleneck = bottleneck
         self.num_iters = num_iters
         self.batch_size = batch_size
         self.input_size = input_size
 
-        self.encoder = EncoderRNN(self.bottleneck)
-        self.decoder = DecoderRNN()
+        self.encoder = EncoderRNN(self.bottleneck, name="encoder")
+        self.decoder = DecoderRNN(name="decoder")
 
         self.normalize = Lambda(lambda x: tf.multiply(tf.subtract(x, 0.1), 2.5), name="normalization")
         self.subtract = Subtract()
-        self.inputs = tf.keras.layers.Input(shape=(self.batch_size, self.input_size, self.input_size, 1))
+        self.inputs = tf.keras.layers.Input(shape=(self.input_size, self.input_size, 1))
 
         self.DIM1 = self.input_size // 2
         self.DIM2 = self.DIM1 // 2
@@ -226,22 +227,22 @@ class LidarCompressionNetwork(Model):
         loss = tf.reduce_mean(tf.abs(res))
         return loss
 
-    def initial_hidden(self, batch_size, hidden_size, filters):
+    def initial_hidden(self, batch_size, hidden_size, filters, data_type=tf.dtypes.float32):
         """Initialize hidden and cell states, all zeros"""
         shape = tf.TensorShape([batch_size] + hidden_size + [filters])
-        hidden = tf.zeros(shape)
-        cell = tf.zeros(shape)
+        hidden = tf.zeros(shape, dtype=data_type)
+        cell = tf.zeros(shape, dtype=data_type)
         return hidden, cell
 
     def call(self, inputs, training=False):
         # Initialize the hidden states when a new batch comes in
-        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 256)
-        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512)
-        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512)
-        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512)
-        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512)
-        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 256)
-        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 128)
+        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 256, inputs.dtype)
+        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
+        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
+        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
+        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
+        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 256, inputs.dtype)
+        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 128, inputs.dtype)
         outputs = tf.zeros_like(inputs)
 
         inputs = self.normalize(inputs)
@@ -259,6 +260,7 @@ class LidarCompressionNetwork(Model):
             self.add_loss(self.compute_loss(res))
         # Denormalize the tensors
         outputs = tf.clip_by_value(tf.add(tf.multiply(outputs, 0.4), 0.1), 0, 1)
+        outputs = tf.cast(outputs, dtype=tf.float32)
         return outputs
 
     def train_step(self, data):

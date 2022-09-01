@@ -39,6 +39,8 @@ def additive_lstm_demo_cfg():
     cfg.val_batch_size = 1
     cfg.save_freq = 20
     cfg.train_output_dir = "output"
+    cfg.xla = False
+    cfg.mixed_precision = False
 
     # Learning Rate scheduler
     cfg.lr_init = 2e-3

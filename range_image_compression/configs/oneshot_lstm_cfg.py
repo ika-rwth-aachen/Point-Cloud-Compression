@@ -37,8 +37,10 @@ def oneshot_lstm_cfg():
     cfg.epochs = 3000
     cfg.batch_size = 256
     cfg.val_batch_size = 256
-    cfg.save_freq = 2000
+    cfg.save_freq = 10000
     cfg.train_output_dir = "output"
+    cfg.xla = False
+    cfg.mixed_precision = False
 
     # Learning Rate scheduler
     cfg.lr_init = 2e-3

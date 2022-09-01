@@ -30,67 +30,55 @@ from keras.layers import Add, Subtract
 
 
 class RnnConv(Layer):
-    """Convolutional GRU cell
-    See detail in formula (11-13) in paper
+    """Convolutional LSTM cell
+    See detail in formula (4-6) in paper
     "Full Resolution Image Compression with Recurrent Neural Networks"
     https://arxiv.org/pdf/1608.05148.pdf
     Args:
-        name: name of current ConvGRU layer
+        name: name of current ConvLSTM layer
         filters: number of filters for each convolutional operation
         strides: strides size
         kernel_size: kernel size of convolutional operation
         hidden_kernel_size: kernel size of convolutional operation for hidden state
     Input:
         inputs: input of the layer
-        hidden: hidden state of the layer
+        hidden: hidden state and cell state of the layer
     Output:
         newhidden: updated hidden state of the layer
+        newcell: updated cell state of the layer
     """
 
     def __init__(self, name, filters, strides, kernel_size, hidden_kernel_size):
         super(RnnConv, self).__init__()
         self.filters = filters
         self.strides = strides
-        # gates
-        self.conv_i = Conv2D(filters=2 * self.filters,
+        self.conv_i = Conv2D(filters=4 * self.filters,
                              kernel_size=kernel_size,
                              strides=self.strides,
                              padding='same',
                              use_bias=False,
                              name=name + '_i')
-        self.conv_h = Conv2D(filters=2 * self.filters,
+        self.conv_h = Conv2D(filters=4 * self.filters,
                              kernel_size=hidden_kernel_size,
                              padding='same',
                              use_bias=False,
                              name=name + '_h')
-        # candidate
-        self.conv_ci = Conv2D(filters=self.filters,
-                              kernel_size=kernel_size,
-                              strides=self.strides,
-                              padding='same',
-                              use_bias=False,
-                              name=name + '_ci')
-        self.conv_ch = Conv2D(filters=self.filters,
-                              kernel_size=hidden_kernel_size,
-                              padding='same',
-                              use_bias=False,
-                              name=name + '_ch')
 
     def call(self, inputs, hidden):
         # with tf.variable_scope(name, reuse=tf.AUTO_REUSE):
         conv_inputs = self.conv_i(inputs)
-        conv_hidden = self.conv_h(hidden)
+        conv_hidden = self.conv_h(hidden[0])
         # all gates are determined by input and hidden layer
-        r_gate, z_gate = tf.split(
-            conv_inputs + conv_hidden, 2, axis=-1)  # each gate get the same number of filters
-        r_gate = tf.nn.sigmoid(r_gate)  # input/update gate
-        z_gate = tf.nn.sigmoid(z_gate)
-        conv_inputs_candidate = self.conv_ci(inputs)
-        hidden_candidate = tf.multiply(r_gate, hidden)
-        conv_hidden_candidate = self.conv_ch(hidden_candidate)
-        candidate = tf.nn.tanh(conv_inputs_candidate + conv_hidden_candidate)
-        newhidden = tf.multiply(1 - z_gate, hidden) + tf.multiply(z_gate, candidate)
-        return newhidden
+        in_gate, f_gate, out_gate, c_gate = tf.split(
+            conv_inputs + conv_hidden, 4, axis=-1)  # each gate get the same number of filters
+        in_gate = tf.nn.sigmoid(in_gate)  # input/update gate
+        f_gate = tf.nn.sigmoid(f_gate)
+        out_gate = tf.nn.sigmoid(out_gate)
+        c_gate = tf.nn.tanh(c_gate)  # candidate cell, calculated from input
+        # forget_gate*old_cell+input_gate(update)*candidate_cell
+        newcell = tf.multiply(f_gate, hidden[1]) + tf.multiply(in_gate, c_gate)
+        newhidden = tf.multiply(out_gate, tf.nn.tanh(newcell))
+        return newhidden, newcell
 
 
 class EncoderRNN(Layer):
@@ -101,36 +89,37 @@ class EncoderRNN(Layer):
     Input:
         input: output array from last iteration.
                In the first iteration, it is the normalized image patch
-        hidden2, hidden3, hidden4: hidden states of corresponding ConvGRU layers
+        hidden2, hidden3, hidden4: hidden and cell states of corresponding ConvLSTM layers
         training: boolean, whether the call is in inference mode or training mode
     Output:
         encoded: encoded binary array in each iteration
-        hidden2, hidden3, hidden4: hidden states of corresponding ConvGRU layers
+        hidden2, hidden3, hidden4: hidden and cell states of corresponding ConvLSTM layers
     """
     def __init__(self, bottleneck, name=None):
         super(EncoderRNN, self).__init__(name=name)
         self.bottleneck = bottleneck
-        self.Conv_e1 = Conv2D(128, kernel_size=(3, 3), strides=(2, 2), padding="same", name='Conv_e1')
-        self.RnnConv_e1 = RnnConv("RnnConv_e1", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e2 = RnnConv("RnnConv_e2", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e3 = RnnConv("RnnConv_e3", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.Conv_b = Conv2D(self.bottleneck, kernel_size=(1, 1), activation=tf.nn.tanh, name='b_conv')
+        self.Conv_e1 = Conv2D(32, kernel_size=(3, 3), strides=(2, 2), padding="same", use_bias=False, name='Conv_e1')
+        self.RnnConv_e1 = RnnConv("RnnConv_e1", 128, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e2 = RnnConv("RnnConv_e2", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e3 = RnnConv("RnnConv_e3", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.Conv_b = Conv2D(self.bottleneck, kernel_size=(1, 1), activation=tf.nn.tanh, use_bias=False, name='b_conv')
         self.Sign = Lambda(lambda x: tf.sign(x), name="sign")
 
     def call(self, input, hidden2, hidden3, hidden4, training=False):
         # with tf.compat.v1.variable_scope("encoder", reuse=True):
         # input size (32,32,1)
         x = self.Conv_e1(input)
-        # (16,16,64)
+        # x = self.GDN(x)
+        # (16,16,32)
         hidden2 = self.RnnConv_e1(x, hidden2)
-        x = hidden2
-        # (8,8,256)
+        x = hidden2[0]
+        # (8,8,128)
         hidden3 = self.RnnConv_e2(x, hidden3)
-        x = hidden3
-        # (4,4,512)
+        x = hidden3[0]
+        # (4,4,256)
         hidden4 = self.RnnConv_e3(x, hidden4)
-        x = hidden4
-        # (2,2,512)
+        x = hidden4[0]
+        # (2,2,256)
         # binarizer
         x = self.Conv_b(x)
         # (2,2,bottleneck)
@@ -150,20 +139,20 @@ class DecoderRNN(Layer):
     Decoder layer for one iteration.
     Input:
         input: decoded array in each iteration
-        hidden2, hidden3, hidden4, hidden5: hidden states of corresponding ConvGRU layers
+        hidden2, hidden3, hidden4, hidden5: hidden and cell states of corresponding ConvLSTM layers
         training: boolean, whether the call is in inference mode or training mode
     Output:
         decoded: decoded array in each iteration
-        hidden2, hidden3, hidden4, hidden5: hidden states of corresponding ConvGRU layers
+        hidden2, hidden3, hidden4, hidden5: hidden and cell states of corresponding ConvLSTM layers
     """
     def __init__(self, name=None):
         super(DecoderRNN, self).__init__(name=name)
-        self.Conv_d1 = Conv2D(512, kernel_size=(1, 1), use_bias=False, name='d_conv1')
-        self.RnnConv_d2 = RnnConv("RnnConv_d2", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d3 = RnnConv("RnnConv_d3", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d4 = RnnConv("RnnConv_d4", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d5 = RnnConv("RnnConv_d5", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.Conv_d6 = Conv2D(filters=1, kernel_size=(1, 1), padding='same', name='d_conv6', use_bias=False,
+        self.Conv_d1 = Conv2D(256, kernel_size=(1, 1), use_bias=False, name='d_conv1')
+        self.RnnConv_d2 = RnnConv("RnnConv_d2", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d3 = RnnConv("RnnConv_d3", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d4 = RnnConv("RnnConv_d4", 128, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d5 = RnnConv("RnnConv_d5", 64, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.Conv_d6 = Conv2D(filters=1, kernel_size=(1, 1), padding='same', use_bias=False, name='d_conv6',
                               activation=tf.nn.tanh)
         self.DTS1 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_1")
         self.DTS2 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_2")
@@ -174,31 +163,30 @@ class DecoderRNN(Layer):
 
     def call(self, input, hidden2, hidden3, hidden4, hidden5, training=False):
         # (2,2,bottleneck)
-        x_conv1 = self.Conv_d1(input)
-        # x = self.Conv_d1(input)
-        # (2,2,512)
-        hidden2 = self.RnnConv_d2(x_conv1, hidden2)
-        x = hidden2
-        # (2,2,512)
-        x = self.Add([x, x_conv1])
+        x_conv = self.Conv_d1(input)
+        # (2,2,256)
+        hidden2 = self.RnnConv_d2(x_conv, hidden2)
+        x = hidden2[0]
+        # (2,2,256)
+        x = self.Add([x, x_conv])
         x = self.DTS1(x)
-        # (4,4,128)
+        # (4,4,64)
         hidden3 = self.RnnConv_d3(x, hidden3)
-        x = hidden3
-        # (4,4,512)
+        x = hidden3[0]
+        # (4,4,256)
         x = self.DTS2(x)
-        # (8,8,128)
+        # (8,8,64)
         hidden4 = self.RnnConv_d4(x, hidden4)
-        x = hidden4
-        # (8,8,256)
+        x = hidden4[0]
+        # (8,8,128)
         x = self.DTS3(x)
-        # (16,16,64)
+        # (16,16,32)
         hidden5 = self.RnnConv_d5(x, hidden5)
-        x = hidden5
-        # (16,16,128)
+        x = hidden5[0]
+        # (16,16,64)
         x = self.DTS4(x)
         # (32,32,32)
-        # output in range (-1,1)
+        # output in range (-0.5,0.5)
         x = self.Conv_d6(x)
         decoded = self.Out(x)
         return decoded, hidden2, hidden3, hidden4, hidden5
@@ -206,10 +194,10 @@ class DecoderRNN(Layer):
 
 class LidarCompressionNetwork(Model):
     """
-    The model to compress range image projected from point clouds captured by Velodyne LiDAR sensor.
+    The model to compress range image projected from point clouds captured by Velodyne LiDAR sensor
     The encoder and decoder layers are iteratively called for num_iters iterations.
     Details see paper Full Resolution Image Compression with Recurrent Neural Networks
-    https://arxiv.org/pdf/1608.05148.pdf. This architecture uses additive reconstruction framework and ConvGRU layers.
+    https://arxiv.org/pdf/1608.05148.pdf. This architecture uses additive reconstruction framework and ConvLSTM layers.
     """
     def __init__(self, bottleneck, num_iters, batch_size, input_size):
         super(LidarCompressionNetwork, self).__init__(name="lidar_compression_network")
@@ -243,17 +231,18 @@ class LidarCompressionNetwork(Model):
         """Initialize hidden and cell states, all zeros"""
         shape = tf.TensorShape([batch_size] + hidden_size + [filters])
         hidden = tf.zeros(shape, dtype=data_type)
-        return hidden
+        cell = tf.zeros(shape, dtype=data_type)
+        return hidden, cell
 
     def call(self, inputs, training=False):
         # Initialize the hidden states when a new batch comes in
-        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 512, inputs.dtype)
-        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
-        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
-        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
-        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
-        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 512, inputs.dtype)
-        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 256, inputs.dtype)
+        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 128, inputs.dtype)
+        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 256, inputs.dtype)
+        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 256, inputs.dtype)
+        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 256, inputs.dtype)
+        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 256, inputs.dtype)
+        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 128, inputs.dtype)
+        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 64, inputs.dtype)
         outputs = tf.zeros_like(inputs)
 
         inputs = self.normalize(inputs)

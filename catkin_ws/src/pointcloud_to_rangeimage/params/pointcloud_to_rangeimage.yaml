@@ -39,8 +39,11 @@ rnn_compression:
     # Fewer number of iterations leads to smaller compressed data size and lower compression quality.
     num_iters: 32
 
+    xla: True
+    mixed_precision: False
+
 
 image_compression:
-    # Parameters for compression of range image uring jpeg or png compression
+    # Parameters for compression of range image using jpeg or png compression
     image_compression_method: jpeg  # png or jpeg
     show_debug_prints: false

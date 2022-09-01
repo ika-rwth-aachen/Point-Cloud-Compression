@@ -302,14 +302,12 @@ class MsgEncoder:
     def __init__(self):
         self.pub = rospy.Publisher('msg_encoded', RangeImageEncoded_msg, queue_size=10)
         self.sub = rospy.Subscriber("/pointcloud_to_rangeimage_node/msg_out", RangeImage_msg, self.callback)
-
         self.bridge = CvBridge()
 
         bottleneck = rospy.get_param("/rnn_compression/bottleneck")
         num_iters = rospy.get_param("/rnn_compression/num_iters")
         weights_path = rospy.get_param("/rnn_compression/weights_path")
 
-        # load model
         self.encoder = EncoderModel(bottleneck, num_iters)
         self.encoder(np.zeros((1, 32, 1824, 1)))
         zero_codes = []
@@ -389,6 +387,7 @@ class msg_decoder:
             zero_codes.append(np.zeros((1, 2, 114, bottleneck)))
         self.decoder(zero_codes)
         self.decoder.load_weights(weights_path, by_name=True)
+
         self.num_iters = num_iters
 
     def callback(self, msg):
@@ -425,6 +424,7 @@ class msg_decoder:
         except CvBridgeError as e:
             print(e)
 
+        # Pack images in ROS message
         msg_decoded = RangeImage_msg()
         msg_decoded.header = msg.header
         msg_decoded.send_time = msg.send_time
