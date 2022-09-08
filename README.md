@@ -168,11 +168,12 @@ Default parameters for the network architectures
 | `num_iters` | maximum number of iterations | `32` |
 
 ### Model Zoo
-| Model Architecture | Filename | Validation MAE | Evaluation SNNRMSE `iter=32`  |
-| ---                | ---     | ---            | ---                   |
-| Additive LSTM | `additive_lstm_32b_32iter.hdf5` | `2.6e-04` | `0.03473` |
-| Oneshot LSTM | Will be uploaded soon | TBD | TBD |
-| Additive GRU  | Will be uploaded soon | TBD | TBD |
+| Model Architecture | Filename                             | Validation MAE | Evaluation SNNRMSE `iter=32`  |
+| ---                | ---                                  | ---            | ---                           |
+| Additive LSTM      | `additive_lstm_32b_32iter.hdf5`      | `2.6e-04`      | `0.03473`                     |
+| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| `2.5e-04`      | `0.03964`                      |
+| Oneshot LSTM       | Will be uploaded soon                | TBD            | TBD                           |
+| Additive GRU       | Will be uploaded soon                | TBD            | TBD                           |
 
 ## Download of Dataset, Models and Evaluation Frames
 The dataset to train the range image compression framework can be retrieved by filling out the following form
@@ -186,6 +187,7 @@ After filling out the form, you will obtain a link where you can download the fo
 - __`evaluation_frames.bag`__ (17.6 MB): ROS bag which contains the Velodyne package data in order to evaluate the model.
   Frames in this bag file were not used for training nor for validation.
 - __`additive_lstm_32b_32iter.hdf5`__ (271 MB): Trained model with a bottleneck size of 32
+- __`additive_lstm_32b_32iter_slim.hdf5`__ (67.9 MB): Trained model with a bottleneck size of 32
 
 ## Inference & Evaluation Node
 The inference and evaluation is conducted with ROS. The inferences and preprocessing nodes can be found
