@@ -168,12 +168,12 @@ Default parameters for the network architectures
 | `num_iters` | maximum number of iterations | `32` |
 
 ### Model Zoo
-| Model Architecture | Filename                             | Validation MAE | Evaluation SNNRMSE `iter=32`  |
-| ---                | ---                                  | ---            | ---                           |
-| Additive LSTM      | `additive_lstm_32b_32iter.hdf5`      | `2.6e-04`      | `0.03473`                     |
-| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| `2.5e-04`      | `0.03964`                      |
-| Oneshot LSTM       | Will be uploaded soon                | TBD            | TBD                           |
-| Additive GRU       | Will be uploaded soon                | TBD            | TBD                           |
+| Model Architecture | Filename                             | Batch Size | Validation MAE  | Evaluation SNNRMSE `iter=32` |
+| ---                | ---                                  |------------|----------------|------------------------------|
+| Additive LSTM      | `additive_lstm_32b_32iter.hdf5`      | 32         | `2.6e-04`  | `0.03473`                    |
+| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| 128        | `2.3e-04`  | `0.03777`                    |
+| Oneshot LSTM       | Will be uploaded soon                | TBD        | TBD        | TBD                          |
+| Additive GRU       | Will be uploaded soon                | TBD        |  TBD       | TBD                          |
 
 ## Download of Dataset, Models and Evaluation Frames
 The dataset to train the range image compression framework can be retrieved by filling out the following form
