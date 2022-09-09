@@ -171,7 +171,7 @@ Default parameters for the network architectures
 | Model Architecture | Filename                             | Batch Size | Validation MAE  | Evaluation SNNRMSE `iter=32` |
 | ---                | ---                                  |------------|----------------|------------------------------|
 | Additive LSTM      | `additive_lstm_32b_32iter.hdf5`      | 32         | `2.6e-04`  | `0.03473`                    |
-| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| 128        | `2.3e-04`  | `0.03777`                    |
+| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| 128        | `2.3e-04`  | `0.03636`                    |
 | Oneshot LSTM       | Will be uploaded soon                | TBD        | TBD        | TBD                          |
 | Additive GRU       | Will be uploaded soon                | TBD        |  TBD       | TBD                          |
 
@@ -187,7 +187,7 @@ After filling out the form, you will obtain a link where you can download the fo
 - __`evaluation_frames.bag`__ (17.6 MB): ROS bag which contains the Velodyne package data in order to evaluate the model.
   Frames in this bag file were not used for training nor for validation.
 - __`additive_lstm_32b_32iter.hdf5`__ (271 MB): Trained model with a bottleneck size of 32
-- __`additive_lstm_32b_32iter_slim.hdf5`__ (67.9 MB): Trained model with a bottleneck size of 32
+- __`additive_lstm_128b_32iter_slim.hdf5`__ (67.9 MB): Trained model with a bottleneck size of 32
 
 ## Inference & Evaluation Node
 The inference and evaluation is conducted with ROS. The inferences and preprocessing nodes can be found
@@ -280,5 +280,5 @@ Mail: `yuchen.tao (at) rwth-aachen.de`
 
 ## Acknowledgement
 
->This research is accomplished within the project ”UNICARagil” (FKZ 16EMO0289). We acknowledge the financial support for
+>This research is accomplished within the project ”UNICARagil” (FKZ 16EMO0284K). We acknowledge the financial support for
 >the project by the Federal Ministry of Education and Research of Germany (BMBF).
