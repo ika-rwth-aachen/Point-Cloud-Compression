@@ -35,15 +35,15 @@ def additive_gru_cfg():
 
     # Training
     cfg.epochs = 3000
-    cfg.batch_size = 256
-    cfg.val_batch_size = 256
+    cfg.batch_size = 128
+    cfg.val_batch_size = 128
     cfg.save_freq = 10000
     cfg.train_output_dir = "output"
-    cfg.xla = False
+    cfg.xla = True
     cfg.mixed_precision = False
 
     # Learning Rate scheduler
-    cfg.lr_init = 2e-3
+    cfg.lr_init = 2e-4
     cfg.min_learning_rate = 2e-7
     cfg.min_learning_rate_epoch = cfg.epochs
     cfg.max_learning_rate_epoch = 0
