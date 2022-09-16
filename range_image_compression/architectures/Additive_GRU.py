@@ -110,10 +110,10 @@ class EncoderRNN(Layer):
     def __init__(self, bottleneck, name=None):
         super(EncoderRNN, self).__init__(name=name)
         self.bottleneck = bottleneck
-        self.Conv_e1 = Conv2D(128, kernel_size=(3, 3), strides=(2, 2), padding="same", name='Conv_e1')
-        self.RnnConv_e1 = RnnConv("RnnConv_e1", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e2 = RnnConv("RnnConv_e2", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e3 = RnnConv("RnnConv_e3", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.Conv_e1 = Conv2D(32, kernel_size=(3, 3), strides=(2, 2), padding="same", name='Conv_e1')
+        self.RnnConv_e1 = RnnConv("RnnConv_e1", 128, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e2 = RnnConv("RnnConv_e2", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e3 = RnnConv("RnnConv_e3", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
         self.Conv_b = Conv2D(self.bottleneck, kernel_size=(1, 1), activation=tf.nn.tanh, name='b_conv')
         self.Sign = Lambda(lambda x: tf.sign(x), name="sign")
 
@@ -158,12 +158,12 @@ class DecoderRNN(Layer):
     """
     def __init__(self, name=None):
         super(DecoderRNN, self).__init__(name=name)
-        self.Conv_d1 = Conv2D(512, kernel_size=(1, 1), use_bias=False, name='d_conv1')
-        self.RnnConv_d2 = RnnConv("RnnConv_d2", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d3 = RnnConv("RnnConv_d3", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d4 = RnnConv("RnnConv_d4", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d5 = RnnConv("RnnConv_d5", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.Conv_d6 = Conv2D(filters=1, kernel_size=(1, 1), padding='same', name='d_conv6', use_bias=False,
+        self.Conv_d1 = Conv2D(256, kernel_size=(1, 1), use_bias=False, name='d_conv1')
+        self.RnnConv_d2 = RnnConv("RnnConv_d2", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d3 = RnnConv("RnnConv_d3", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d4 = RnnConv("RnnConv_d4", 128, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d5 = RnnConv("RnnConv_d5", 64, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.Conv_d6 = Conv2D(filters=1, kernel_size=(1, 1), padding='same', use_bias=False, name='d_conv6',
                               activation=tf.nn.tanh)
         self.DTS1 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_1")
         self.DTS2 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_2")
@@ -247,13 +247,13 @@ class LidarCompressionNetwork(Model):
 
     def call(self, inputs, training=False):
         # Initialize the hidden states when a new batch comes in
-        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 512, inputs.dtype)
-        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
-        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
-        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 512, inputs.dtype)
-        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 512, inputs.dtype)
-        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 512, inputs.dtype)
-        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 256, inputs.dtype)
+        hidden_e2 = self.initial_hidden(self.batch_size, [8, self.DIM2], 128, inputs.dtype)
+        hidden_e3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 256, inputs.dtype)
+        hidden_e4 = self.initial_hidden(self.batch_size, [2, self.DIM4], 256, inputs.dtype)
+        hidden_d2 = self.initial_hidden(self.batch_size, [2, self.DIM4], 256, inputs.dtype)
+        hidden_d3 = self.initial_hidden(self.batch_size, [4, self.DIM3], 256, inputs.dtype)
+        hidden_d4 = self.initial_hidden(self.batch_size, [8, self.DIM2], 128, inputs.dtype)
+        hidden_d5 = self.initial_hidden(self.batch_size, [16, self.DIM1], 64, inputs.dtype)
         outputs = tf.zeros_like(inputs)
 
         inputs = self.normalize(inputs)

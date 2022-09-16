@@ -41,7 +41,7 @@ config_map = {
     "additive_lstm": additive_lstm_cfg.additive_lstm_cfg,
     "additive_lstm_slim": additive_lstm_slim_cfg.additive_lstm_slim_cfg,
     "additive_gru": additive_gru_cfg.additive_gru_cfg,
-    "onshot_lstm": oneshot_lstm_cfg.oneshot_lstm_cfg,
+    "oneshot_lstm": oneshot_lstm_cfg.oneshot_lstm_cfg,
 }
 
 
