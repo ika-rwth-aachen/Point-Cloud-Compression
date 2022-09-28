@@ -168,12 +168,12 @@ Default parameters for the network architectures
 | `num_iters` | maximum number of iterations | `32` |
 
 ### Model Zoo
-| Model Architecture | Filename                             | Batch Size | Validation MAE  | Evaluation SNNRMSE `iter=32` |
-| ---                | ---                                  |------------|----------------|------------------------------|
-| Additive LSTM      | `additive_lstm_32b_32iter.hdf5`      | 32         | `2.6e-04`  | `0.03473`                    |
-| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5`| 128        | `2.3e-04`  | `0.03636`                    |
-| Oneshot LSTM       | Will be uploaded soon                | TBD        | TBD        | TBD                          |
-| Additive GRU       | Will be uploaded soon                | TBD        |  TBD       | TBD                          |
+| Model Architecture | Filename                              | Batch Size | Validation MAE | Evaluation SNNRMSE `iter=32` |
+| ---                |---------------------------------------|------------|----------------|------------------------------|
+| Additive LSTM      | `additive_lstm_32b_32iter.hdf5`       | 32         | `2.6e-04`      | `0.03473`                    |
+| Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5` | 128        | `2.3e-04`      | `0.03636`                    |
+| Oneshot LSTM       | `oneshot_lstm_b128_32iter.hdf5`       | 128        | `2.4e-04`      | `0.05137`                    |
+| Additive GRU       | Will be uploaded soon                 | TBD        | TBD            | TBD                          |
 
 ## Download of Dataset, Models and Evaluation Frames
 The dataset to train the range image compression framework can be retrieved by filling out the following form
@@ -188,6 +188,7 @@ After filling out the form, you will obtain a link where you can download the fo
   Frames in this bag file were not used for training nor for validation.
 - __`additive_lstm_32b_32iter.hdf5`__ (271 MB): Trained model with a bottleneck size of 32
 - __`additive_lstm_128b_32iter_slim.hdf5`__ (67.9 MB): Trained model with a bottleneck size of 32
+- __`oneshot_lstm_b128_32iter.hdf5`__ (68.1 MB): Trained model with a bottleneck size of 32
 
 ## Inference & Evaluation Node
 The inference and evaluation is conducted with ROS. The inferences and preprocessing nodes can be found
