@@ -23,7 +23,7 @@
 #  ==============================================================================
 
 import tensorflow as tf
-import numpy as np
+
 
 from architectures import Additive_LSTM_Demo, Additive_LSTM, Additive_LSTM_Slim, Additive_GRU, Oneshot_LSTM
 from configs import additive_lstm_demo_cfg, additive_lstm_cfg, additive_lstm_slim_cfg, additive_gru_cfg, oneshot_lstm_cfg
