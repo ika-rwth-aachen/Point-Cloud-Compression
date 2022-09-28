@@ -85,11 +85,11 @@ class EncoderRNN(Layer):
     def __init__(self, bottleneck, name=None):
         super(EncoderRNN, self).__init__(name=name)
         self.bottleneck = bottleneck
-        self.Conv_e1 = Conv2D(64, kernel_size=(3,3), strides=(2, 2), padding="same", use_bias=False, name='Conv_e1')
+        self.Conv_e1 = Conv2D(32, kernel_size=(3, 3), strides=(2, 2), padding="same", use_bias=False, name='Conv_e1')
         self.GDN = tfc.GDN(alpha_parameter=2, epsilon_parameter=0.5, name="gdn")
-        self.RnnConv_e1 = RnnConv("RnnConv_e1", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e2 = RnnConv("RnnConv_e2", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_e3 = RnnConv("RnnConv_e3", 512, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e1 = RnnConv("RnnConv_e1", 128, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e2 = RnnConv("RnnConv_e2", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_e3 = RnnConv("RnnConv_e3", 256, (2, 2), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
         self.Conv_b = Conv2D(bottleneck, kernel_size=(1, 1), activation=tf.nn.tanh, use_bias=False, name='b_conv')
         self.Sign = Lambda(lambda x: tf.sign(x), name="sign")
 
@@ -130,13 +130,14 @@ class DecoderRNN(Layer):
     """
     def __init__(self, name=None):
         super(DecoderRNN, self).__init__(name=name)
-        self.Conv_d1 = Conv2D(512, kernel_size=(1, 1), use_bias=False, name='d_conv1')
+        self.Conv_d1 = Conv2D(256, kernel_size=(1, 1), use_bias=False, name='d_conv1')
         self.iGDN = tfc.GDN(alpha_parameter=2, epsilon_parameter=0.5, inverse=True, name="igdn")
-        self.RnnConv_d2 = RnnConv("RnnConv_d2", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d3 = RnnConv("RnnConv_d3", 512, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d4 = RnnConv("RnnConv_d4", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.RnnConv_d5 = RnnConv("RnnConv_d5", 128, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
-        self.Conv_d6 = Conv2D(1, kernel_size=(1, 1), padding='same', name='d_conv6', use_bias=False, activation=tf.nn.tanh)
+        self.RnnConv_d2 = RnnConv("RnnConv_d2", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d3 = RnnConv("RnnConv_d3", 256, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d4 = RnnConv("RnnConv_d4", 128, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.RnnConv_d5 = RnnConv("RnnConv_d5", 64, (1, 1), kernel_size=(3, 3), hidden_kernel_size=(3, 3))
+        self.Conv_d6 = Conv2D(filters=1, kernel_size=(1, 1), padding='same', name='d_conv6',
+                              use_bias=False, activation=tf.nn.tanh)
         self.DTS1 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_1")
         self.DTS2 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_2")
         self.DTS3 = Lambda(lambda x: tf.nn.depth_to_space(x, 2), name="dts_3")
@@ -212,19 +213,20 @@ class EncoderModel(Model):
     def call(self, inputs, training=False):
         # Initialize the hidden states when a new batch comes in
         batch_size = inputs.shape[0]
-        hidden_e2 = self.initial_hidden(batch_size, [8, self.DIM2], 256)
-        hidden_e3 = self.initial_hidden(batch_size, [4, self.DIM3], 512)
-        hidden_e4 = self.initial_hidden(batch_size, [2, self.DIM4], 512)
-        hidden_d2 = self.initial_hidden(batch_size, [2, self.DIM4], 512)
-        hidden_d3 = self.initial_hidden(batch_size, [4, self.DIM3], 512)
-        hidden_d4 = self.initial_hidden(batch_size, [8, self.DIM2], 256)
-        hidden_d5 = self.initial_hidden(batch_size, [16, self.DIM1], 128)
+        hidden_e2 = self.initial_hidden(batch_size, [8, self.DIM2], 128)
+        hidden_e3 = self.initial_hidden(batch_size, [4, self.DIM3], 256)
+        hidden_e4 = self.initial_hidden(batch_size, [2, self.DIM4], 256)
+        hidden_d2 = self.initial_hidden(batch_size, [2, self.DIM4], 256)
+        hidden_d3 = self.initial_hidden(batch_size, [4, self.DIM3], 256)
+        hidden_d4 = self.initial_hidden(batch_size, [8, self.DIM2], 128)
+        hidden_d5 = self.initial_hidden(batch_size, [16, self.DIM1], 64)
         codes = []
         inputs = self.normalize(inputs)
         res = inputs
         for i in range(self.num_iters-1):
             code, hidden_e2, hidden_e3, hidden_e4 = \
                 self.encoder(res, hidden_e2, hidden_e3, hidden_e4, training=training)
+
             decoded, hidden_d2, hidden_d3, hidden_d4, hidden_d5 = \
                 self.decoder(code, hidden_d2, hidden_d3, hidden_d4, hidden_d5, training=training)
 
@@ -276,10 +278,10 @@ class DecoderModel(Model):
 
     def call(self, codes, training=False):
         batch_size = codes[0].shape[0]
-        hidden_d2 = self.initial_hidden(batch_size, [2, self.DIM4], 512)
-        hidden_d3 = self.initial_hidden(batch_size, [4, self.DIM3], 512)
-        hidden_d4 = self.initial_hidden(batch_size, [8, self.DIM2], 256)
-        hidden_d5 = self.initial_hidden(batch_size, [16, self.DIM1], 128)
+        hidden_d2 = self.initial_hidden(batch_size, [2, self.DIM4], 256)
+        hidden_d3 = self.initial_hidden(batch_size, [4, self.DIM3], 256)
+        hidden_d4 = self.initial_hidden(batch_size, [8, self.DIM2], 128)
+        hidden_d5 = self.initial_hidden(batch_size, [16, self.DIM1], 64)
         for i in range(self.num_iters):
             decoded, hidden_d2, hidden_d3, hidden_d4, hidden_d5 = \
                 self.decoder(codes[i], hidden_d2, hidden_d3, hidden_d4, hidden_d5, training=training)
@@ -366,14 +368,14 @@ class MsgEncoder:
         self.pub.publish(msg_encoded)
 
 
-class msg_decoder:
+class MsgDecoder:
     """
     Subscribe to topic /msg_encoded published by the encoder.
     Decompress the images and pack them in message type RangeImage.
     Publish message to the topic /msg_decoded.
     """
     def __init__(self):
-        self.pub = rospy.Publisher('msg_decoded', RangeImage_msg, queue_size=10)
+        self.pub = rospy.Publisher("msg_decoded", RangeImage_msg, queue_size=10)
         self.sub = rospy.Subscriber("/msg_encoded", RangeImageEncoded_msg, self.callback)
         self.bridge = CvBridge()
 
@@ -424,7 +426,7 @@ class msg_decoder:
         except CvBridgeError as e:
             print(e)
 
-        # Pack images in ROS message
+        # Pack images in ROS message.
         msg_decoded = RangeImage_msg()
         msg_decoded.header = msg.header
         msg_decoded.send_time = msg.send_time
