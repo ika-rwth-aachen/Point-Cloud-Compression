@@ -172,7 +172,7 @@ Default parameters for the network architectures
 | ---                |---------------------------------------|------------|----------------|------------------------------|
 | Additive LSTM      | `additive_lstm_32b_32iter.hdf5`       | 32         | `2.6e-04`      | `0.03473`                    |
 | Additive LSTM Slim | `additive_lstm_128b_32iter_slim.hdf5` | 128        | `2.3e-04`      | `0.03636`                    |
-| Oneshot LSTM       | `oneshot_lstm_b128_32iter.hdf5`       | 128        | `2.4e-04`      | `0.05137`                    |
+| Oneshot LSTM       | `oneshot_lstm_b128_32iter.hdf5`       | 128        | `2.9e-04`      | `0.05137`                    |
 | Additive GRU       | Will be uploaded soon                 | TBD        | TBD            | TBD                          |
 
 ## Download of Dataset, Models and Evaluation Frames
