@@ -1,6 +1,6 @@
 import tensorflow as tf
 import rospy
-from architectures import additive_lstm, additive_lstm_slim, oneshot_lstm, additive_gru, image_compression
+from architectures import additive_lstm, additive_lstm_demo, additive_lstm_slim, oneshot_lstm, additive_gru, image_compression
 
 physical_devices = tf.config.list_physical_devices('GPU')
 if len(physical_devices) > 0:
@@ -21,6 +21,8 @@ def main():
         encoder = additive_lstm.MsgEncoder()
     elif method == "additive_lstm_slim":
         encoder = additive_lstm_slim.MsgEncoder()
+    elif method == "additive_lstm_demo":
+        encoder = additive_lstm_demo.MsgEncoder()
     elif method == "oneshot_lstm":
         encoder = oneshot_lstm.MsgEncoder()
     elif method == "additive_gru":
