@@ -34,11 +34,11 @@ def additive_lstm_demo_cfg():
     cfg.val_data_dir = "demo_samples/validation"
 
     # Training
-    cfg.epochs = 20
-    cfg.batch_size = 5
-    cfg.val_batch_size = 1
-    cfg.save_freq = 20
-    cfg.train_output_dir = "output"
+    cfg.epochs = 4000
+    cfg.batch_size = 128
+    cfg.val_batch_size = 128
+    cfg.save_freq = 10000
+    cfg.train_output_dir = "/output"
     cfg.xla = True
     cfg.mixed_precision = False
 
