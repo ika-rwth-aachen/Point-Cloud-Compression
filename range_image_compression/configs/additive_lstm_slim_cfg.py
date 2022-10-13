@@ -35,8 +35,8 @@ def additive_lstm_slim_cfg():
 
     # Training
     cfg.epochs = 3000
-    cfg.batch_size = 256
-    cfg.val_batch_size = 256
+    cfg.batch_size = 128
+    cfg.val_batch_size = 128
     cfg.save_freq = 10000
     cfg.train_output_dir = "/output"
     cfg.xla = True
