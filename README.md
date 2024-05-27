@@ -177,9 +177,8 @@ Default parameters for the network architectures
 | Additive GRU       | Will be uploaded soon                 | TBD        | TBD            | TBD                          |
 
 ## Download of Dataset, Models and Evaluation Frames
-The dataset to train the range image compression framework can be retrieved by filling out the following form
-[https://www.unicaragil.de/de/point-cloud-compression](https://www.unicaragil.de/de/point-cloud-compression).
-After filling out the form, you will obtain a link where you can download the following files
+The dataset to train the range image compression framework can be retrieved from [https://rwth-aachen.sciebo.de/s/MLJ4UaDJuVkYtna](https://rwth-aachen.sciebo.de/s/MLJ4UaDJuVkYtna).
+There you should be able to download the following files:
 
 - __`pointcloud_compression.zip`__ (1.8 GB): ZIP File which contains three directories
     - `train`: 30813 range images for training
