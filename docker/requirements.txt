@@ -1,3 +1,4 @@
 tensorflow==2.9.0
 easydict
 tensorflow-compression==2.9.0
+tensorflow-probability==0.17.0
